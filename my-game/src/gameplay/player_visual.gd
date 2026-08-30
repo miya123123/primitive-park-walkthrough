@@ -14,12 +14,15 @@ var _limb_swing_degrees: float = 0.0
 var _jump_pose_degrees: float = 0.0
 var _ride_arm_pose_degrees: float = 0.0
 var _ride_leg_pose_degrees: float = 0.0
+var _ride_seat_pivot_height: float = 0.84
 var _pose_blend_speed: float = 0.0
 var _animation_time: float = 0.0
 var _ride_pose_active: bool = false
+var _standing_position: Vector3 = Vector3.ZERO
 
 ## Configures facing and procedural animation values from the park data.
 func configure(settings: Dictionary) -> void:
+	_standing_position = position
 	_turn_speed = float(settings.get("turn_speed", 0.0))
 	_walk_cycle_speed = float(settings.get("walk_cycle_speed", 0.0))
 	_sprint_cycle_speed = float(settings.get("sprint_cycle_speed", 0.0))
@@ -27,11 +30,15 @@ func configure(settings: Dictionary) -> void:
 	_jump_pose_degrees = float(settings.get("jump_pose_degrees", 0.0))
 	_ride_arm_pose_degrees = float(settings.get("ride_arm_pose_degrees", 12.0))
 	_ride_leg_pose_degrees = float(settings.get("ride_leg_pose_degrees", 58.0))
+	_ride_seat_pivot_height = float(settings.get("ride_seat_pivot_height", 0.84))
 	_pose_blend_speed = float(settings.get("pose_blend_speed", 0.0))
 
 ## Enables or disables the seated procedural pose used by attractions.
 func set_ride_pose(active: bool) -> void:
 	_ride_pose_active = active
+	position = _standing_position + (Vector3.DOWN * _ride_seat_pivot_height if active else Vector3.ZERO)
+	if active:
+		rotation.y = 0.0
 
 ## Blends the visitor's limbs toward a stable seated pose while riding.
 func update_ride_pose(delta: float) -> void:

@@ -57,7 +57,10 @@ func configure(descriptor: Dictionary) -> void:
 	var points_value: Variant = descriptor.get("track_points", [])
 	if points_value is Array:
 		for point_value: Variant in points_value:
-			_track_points.append(ParkConfig.vector3_from_array(point_value))
+			if point_value is Vector3:
+				_track_points.append(Vector3(point_value.x, point_value.y, point_value.z))
+			else:
+				_track_points.append(ParkConfig.vector3_from_array(point_value))
 	_checkpoint_indices.clear()
 	var checkpoints_value: Variant = descriptor.get("checkpoint_indices", [])
 	if checkpoints_value is Array:

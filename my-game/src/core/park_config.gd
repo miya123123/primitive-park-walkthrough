@@ -68,6 +68,7 @@ static func validate(config: Dictionary) -> PackedStringArray:
 			"pose_blend_speed",
 			"ride_arm_pose_degrees",
 			"ride_leg_pose_degrees",
+			"ride_seat_pivot_height",
 			"ride_ground_height_limit"
 		]:
 			var value: Variant = player_config.get(key, null)

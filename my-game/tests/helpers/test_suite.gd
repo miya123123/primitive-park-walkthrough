@@ -55,6 +55,7 @@ func run_config_tests() -> void:
 	var player_config: Dictionary = config["player"]
 	_assert(is_equal_approx(float(player_config["camera_distance"]), 4.5), "third-person camera distance should be configured")
 	_assert(float(player_config["ride_leg_pose_degrees"]) > 0.0, "ride leg pose should be configured")
+	_assert(is_equal_approx(float(player_config["ride_seat_pivot_height"]), 0.84), "ride seat pivot height should align the visitor with seat anchors")
 	_assert(float(player_config["ride_ground_height_limit"]) > 0.0, "ride ground height limit should be configured")
 	_assert(float(config["ride"]["station_tolerance"]) > 0.0, "ride station tolerance should be configured")
 	_assert(is_equal_approx(float(config["landmarks"][3]["suspense_min_seconds"]), 2.5), "free-fall suspense minimum should be configured")
@@ -218,7 +219,7 @@ func run_scene_tests(tree: SceneTree) -> void:
 		_assert(camera.current, "%s should keep the third-person camera active while riding" % ride_id)
 		_assert(not is_equal_approx(ride_camera_yaw_before, camera_yaw.rotation.y), "%s should keep camera orbit input while riding" % ride_id)
 		var seat_anchor: Node3D = descriptor.get("seat_anchor") as Node3D
-		_assert(player.global_position.distance_to(seat_anchor.global_position) < 0.01, "%s should follow its seat anchor" % ride_id)
+		_assert_seated_player(player, visual_root, seat_anchor, float(config["player"]["ride_seat_pivot_height"]), ride_id)
 		Input.action_press(&"move_forward")
 		await tree.physics_frame
 		Input.action_release(&"move_forward")
@@ -238,6 +239,7 @@ func run_scene_tests(tree: SceneTree) -> void:
 		_assert(animator.call("get_ride_state", ride_id) == &"decorative", "%s should return to decorative motion" % ride_id)
 		await tree.physics_frame
 		_assert(not player_collision.disabled, "%s should restore player collision after exit" % ride_id)
+		_assert(absf(visual_root.position.y) < 0.01, "%s should restore the standing visual offset after exit" % ride_id)
 
 	var free_fall_descriptor: Dictionary = ride_descriptors["free_fall_tower"]
 	var free_fall_provider: Node = ride_providers["free_fall_tower"] as Node
@@ -255,6 +257,7 @@ func run_scene_tests(tree: SceneTree) -> void:
 	free_fall_event.pressed = true
 	player.call("_unhandled_input", free_fall_event)
 	_assert(player.call("is_riding"), "free-fall tower should board immediately")
+	_assert_seated_player(player, visual_root, free_fall_descriptor["seat_anchor"] as Node3D, float(config["player"]["ride_seat_pivot_height"]), &"free_fall_tower")
 	free_fall_provider.call("set_random_seed", 11)
 	free_fall_provider.call("advance_simulation", 1.0)
 	for free_fall_step: int in range(12):
@@ -285,6 +288,10 @@ func run_scene_tests(tree: SceneTree) -> void:
 	player.call("_unhandled_input", kart_event)
 	_assert(player.call("is_riding"), "go-kart should board immediately")
 	_assert(kart_provider.call("get_ride_state", &"go_kart") == &"countdown", "go-kart should start with a countdown")
+	_assert_seated_player(player, visual_root, kart_descriptor["seat_anchor"] as Node3D, float(config["player"]["ride_seat_pivot_height"]), &"go_kart")
+	var kart_expected_start: Vector3 = ParkConfig.vector3_from_array(config["landmarks"][4]["track_points"][0])
+	var kart_start_position: Vector3 = (kart_descriptor["cart"] as CharacterBody3D).position
+	_assert(Vector2(kart_start_position.x, kart_start_position.z).distance_to(Vector2(kart_expected_start.x, kart_expected_start.z)) < 0.01, "go-kart should preserve its configured start point")
 	var kart_panel: PanelContainer = main_instance.get_node("HUD/Overlay/KartRacePanel") as PanelContainer
 	_assert(kart_panel.visible, "kart countdown should be visible in the HUD")
 	kart_provider.call("advance_drive", 2.0, 1.0, false, 0.0)
@@ -292,6 +299,12 @@ func run_scene_tests(tree: SceneTree) -> void:
 	kart_provider.call("advance_drive", 1.2, 1.0, false, 0.0)
 	_assert(kart_provider.call("get_ride_state", &"go_kart") == &"racing", "go-kart should become controllable after GO")
 	_assert(float(kart_provider.call("get_progress_snapshot")["lap_count"]) == 3.0, "go-kart progress should expose three laps")
+	var kart_motion_start: Vector3 = (kart_descriptor["cart"] as CharacterBody3D).position
+	for kart_drive_step: int in range(30):
+		kart_provider.call("advance_drive", 1.0 / 60.0, 1.0, false, 0.0)
+	var kart_motion_end: Vector3 = (kart_descriptor["cart"] as CharacterBody3D).position
+	_assert(kart_motion_start.distance_to(kart_motion_end) > 0.5, "go-kart should move continuously while throttle is held")
+	_assert(kart_provider.call("get_ride_state", &"go_kart") == &"racing", "go-kart should remain drivable instead of finishing immediately")
 	var kart_reset_event: InputEventKey = InputEventKey.new()
 	kart_reset_event.keycode = KEY_R
 	kart_reset_event.pressed = true
@@ -304,6 +317,7 @@ func run_scene_tests(tree: SceneTree) -> void:
 	player.call("_unhandled_input", kart_exit_event)
 	_assert(not player.call("is_riding"), "E should exit the manually driven kart")
 	_assert(not kart_panel.visible, "kart HUD should hide after exiting")
+	_assert(absf(visual_root.position.y) < 0.01, "go-kart should restore the standing visual offset after exit")
 	_assert(player_collision.shape is CapsuleShape3D, "player should use a capsule collision")
 	var meshes: Array[MeshInstance3D] = []
 	_collect_meshes(park, meshes)
@@ -344,6 +358,14 @@ func _collect_meshes(node: Node, meshes: Array[MeshInstance3D]) -> void:
 		meshes.append(mesh_instance)
 	for child: Node in node.get_children():
 		_collect_meshes(child, meshes)
+
+func _assert_seated_player(player: CharacterBody3D, visual_root: Node3D, seat_anchor: Node3D, pivot_height: float, ride_id: StringName) -> void:
+	_assert(player.global_position.distance_to(seat_anchor.global_position) < 0.01, "%s should follow its seat anchor" % ride_id)
+	var left_leg: Node3D = visual_root.get_node("LeftLegPivot") as Node3D
+	var right_leg: Node3D = visual_root.get_node("RightLegPivot") as Node3D
+	var hip_center: Vector3 = (left_leg.global_position + right_leg.global_position) * 0.5
+	_assert(hip_center.distance_to(seat_anchor.global_position) < 0.02, "%s should align the visitor hip with the seat anchor" % ride_id)
+	_assert(is_equal_approx(visual_root.position.y, -pivot_height), "%s should apply the configured seated visual offset" % ride_id)
 
 func _assert(condition: bool, message: String) -> void:
 	_assertion_count += 1
