@@ -1,0 +1,112 @@
+# Technical Requirement ID Registry
+#
+# PURPOSE: Persistent, stable IDs for every GDD technical requirement.
+# Prevents TR-ID renumbering across /architecture-review runs, which would
+# break story references.
+#
+# RULES:
+#   - IDs are PERMANENT. Never renumber, never delete (use status: deprecated).
+#   - Add new entries only at the END of each system's list.
+#   - When a GDD requirement is reworded (same intent): update `requirement`
+#     text and add a `revised` date. The ID stays the same.
+#   - When a requirement is removed from the GDD: set status: deprecated.
+#   - When a requirement is split or replaced: set status: superseded-by with
+#     the new TR-ID(s).
+#
+# WRITTEN BY: /architecture-review (appends new entries, never overwrites)
+# READ BY:    /create-stories (embed IDs in stories)
+#             /story-done (look up current requirement text at review time)
+#             /story-readiness (validate TR-ID exists and is active)
+#
+# ID FORMAT: TR-[system-slug]-[NNN]
+#   system-slug = short slug matching the GDD system name
+#   NNN = three-digit zero-padded sequence per system, starting at 001
+#
+# STATUS VALUES: active | deprecated | superseded-by: TR-[system]-NNN
+
+version: 1
+last_updated: 2026-08-28
+
+requirements:
+  - id: TR-ride-001
+    system: ride-interaction
+    gdd: design/gdd/ride-interaction.md
+    requirement: "Eで乗り場の次回到着を予約し、1周後に自動降車する"
+    created: 2026-08-27
+    revised: ""
+    status: active
+  - id: TR-ride-002
+    system: ride-interaction
+    gdd: design/gdd/ride-interaction.md
+    requirement: "観覧車、ジェットコースター、メリーゴーラウンドの3施設を乗車対象にする"
+    created: 2026-08-27
+    revised: ""
+    status: active
+  - id: TR-ride-003
+    system: ride-interaction
+    gdd: design/gdd/ride-interaction.md
+    requirement: "乗車中は三人称カメラを維持し、歩行入力と衝突を一時停止する"
+    created: 2026-08-27
+    revised: ""
+    status: active
+  - id: TR-ride-004
+    system: ride-interaction
+    gdd: design/gdd/ride-interaction.md
+    requirement: "乗車予約をイベント駆動HUDへ表示し、乗り場を離れた予約をキャンセルする"
+    created: 2026-08-27
+    revised: ""
+    status: active
+  - id: TR-ride-005
+    system: ride-expansion
+    gdd: design/gdd/ride-expansion.md
+    requirement: "フリーフォールは上昇後に設定範囲のランダムな待機を置き、落下・制動・自動降車する"
+    created: 2026-08-28
+    revised: ""
+    status: active
+  - id: TR-ride-006
+    system: ride-expansion
+    gdd: design/gdd/ride-expansion.md
+    requirement: "ゴーカートはWASDとShiftで運転できる3周タイムアタックを提供する"
+    created: 2026-08-28
+    revised: ""
+    status: active
+  - id: TR-ride-007
+    system: ride-expansion
+    gdd: design/gdd/ride-expansion.md
+    requirement: "ゴーカートは順序付きチェックポイントと逆走防止で周回を判定する"
+    created: 2026-08-28
+    revised: ""
+    status: active
+  - id: TR-ride-008
+    system: ride-expansion
+    gdd: design/gdd/ride-expansion.md
+    requirement: "ラップ・タイム・ベスト記録をイベント駆動HUDへ表示し、ベストを端末へ保存する"
+    created: 2026-08-28
+    revised: ""
+    status: active
+
+# --- EXAMPLE ENTRIES (remove when first real entries are added) ---
+#
+# - id: TR-combat-001
+#   system: combat
+#   gdd: design/gdd/combat-system.md
+#   requirement: "Player takes damage from enemies based on attack power minus defence"
+#   created: 2026-03-10
+#   revised: ""
+#   status: active
+#
+# - id: TR-combat-002
+#   system: combat
+#   gdd: design/gdd/combat-system.md
+#   requirement: "Combo window timing is 0.4 seconds between hits"
+#   created: 2026-03-10
+#   revised: "2026-04-01"
+#   status: active
+#
+# - id: TR-combat-003
+#   system: combat
+#   gdd: design/gdd/combat-system.md
+#   requirement: "Old damage formula using raw stats"
+#   created: 2026-03-10
+#   revised: ""
+#   status: superseded-by: TR-combat-001
