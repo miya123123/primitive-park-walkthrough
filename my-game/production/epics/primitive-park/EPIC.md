@@ -6,7 +6,7 @@
 
 ## Goal
 
-Deliver a playable Godot 4.6.2 desktop vertical slice where the player can enter and freely walk around a colorful primitive-only amusement park.
+Deliver a playable Godot 4.6.2 desktop and browser vertical slice where the player can enter and freely walk around a colorful primitive-only amusement park.
 
 ## Stories
 
@@ -22,4 +22,4 @@ Deliver a playable Godot 4.6.2 desktop vertical slice where the player can enter
 
 ## Out of Scope
 
-Combat, NPCs, multiplayer, imported assets, audio, and web export. Ride-specific save data is limited to the local go-kart best time.
+Combat, NPCs, multiplayer, imported assets, and audio. Ride-specific save data is limited to the local go-kart best time.
