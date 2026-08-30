@@ -41,7 +41,8 @@ dist/
 # === Engine: Godot ===
 .godot/
 *.translation
-export_presets.cfg
+# Keep export presets in version control so CI can build the Web demo.
+!export_presets.cfg
 # Uncomment if using Godot:
 # *.import
 
