@@ -177,4 +177,8 @@ func _sync_to_ride_anchor() -> void:
 		finish_ride(_ride_exit_marker)
 		return
 	global_position = _ride_anchor.global_position
-	rotation.y = _ride_anchor.global_rotation.y
+	# The coaster seat changes heading as it passes each support. Keep the
+	# player's camera parent at its boarding heading so those vehicle turns do
+	# not rotate the view; mouse orbit remains available while riding.
+	if _ride_id != &"roller_coaster":
+		rotation.y = _ride_anchor.global_rotation.y

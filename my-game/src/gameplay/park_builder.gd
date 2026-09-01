@@ -2,6 +2,7 @@ extends Node3D
 
 const ParkConfig = preload("res://src/core/park_config.gd")
 const PrimitiveFactory = preload("res://src/core/primitive_factory.gd")
+const KartMath = preload("res://src/core/kart_math.gd")
 const AttractionAnimator = preload("res://src/gameplay/attraction_animator.gd")
 const FreeFallController = preload("res://src/gameplay/free_fall_controller.gd")
 const GoKartController = preload("res://src/gameplay/go_kart_controller.gd")
@@ -303,15 +304,18 @@ func _build_go_kart(parent: Node3D, color: Color, accent: Color, landmark: Dicti
 			points.append(ParkConfig.vector3_from_array(point_value))
 	var track_width: float = float(landmark.get("track_width", 3.6))
 	var half_width: float = track_width * 0.5
+	var boundaries: Dictionary = KartMath.closed_track_boundaries(points, track_width)
+	var left_boundary: Array = boundaries.get("left", [])
+	var right_boundary: Array = boundaries.get("right", [])
 	for index: int in range(points.size()):
 		var point: Vector3 = points[index]
 		var next_point: Vector3 = points[(index + 1) % points.size()]
-		var tangent: Vector3 = (next_point - point)
-		tangent.y = 0.0
-		tangent = tangent.normalized()
-		var side: Vector3 = Vector3(-tangent.z, 0.0, tangent.x)
-		PrimitiveFactory.create_box_between(parent, point + side * half_width + Vector3(0.0, 0.35, 0.0), next_point + side * half_width + Vector3(0.0, 0.35, 0.0), 0.24, 0.7, accent, true, StringName("KartBarrierA_%02d" % index))
-		PrimitiveFactory.create_box_between(parent, point - side * half_width + Vector3(0.0, 0.35, 0.0), next_point - side * half_width + Vector3(0.0, 0.35, 0.0), 0.24, 0.7, accent, true, StringName("KartBarrierB_%02d" % index))
+		var left_start: Vector3 = left_boundary[index] if index < left_boundary.size() else point
+		var left_end: Vector3 = left_boundary[(index + 1) % left_boundary.size()] if not left_boundary.is_empty() else next_point
+		var right_start: Vector3 = right_boundary[index] if index < right_boundary.size() else point
+		var right_end: Vector3 = right_boundary[(index + 1) % right_boundary.size()] if not right_boundary.is_empty() else next_point
+		PrimitiveFactory.create_box_between(parent, left_start + Vector3(0.0, 0.35, 0.0), left_end + Vector3(0.0, 0.35, 0.0), 0.24, 0.7, accent, true, StringName("KartBarrierA_%02d" % index))
+		PrimitiveFactory.create_box_between(parent, right_start + Vector3(0.0, 0.35, 0.0), right_end + Vector3(0.0, 0.35, 0.0), 0.24, 0.7, accent, true, StringName("KartBarrierB_%02d" % index))
 		PrimitiveFactory.create_box_between(parent, point + Vector3(0.0, 0.015, 0.0), next_point + Vector3(0.0, 0.015, 0.0), track_width, 0.04, Color("#F8E8BE"), false, StringName("KartLane_%02d" % index))
 	var checkpoint_value: Variant = landmark.get("checkpoint_indices", [])
 	if checkpoint_value is Array:
@@ -398,7 +402,7 @@ func _create_sign(parent: Node3D, sign_text: String, sign_color: Color) -> void:
 	label.outline_size = 7
 	label.modulate = Color("#FFF8E8")
 	label.position = Vector3(0.0, 2.25, -0.13)
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	label.no_depth_test = true
 	sign_root.add_child(label)
 

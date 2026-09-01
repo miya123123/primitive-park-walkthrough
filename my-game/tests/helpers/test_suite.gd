@@ -31,6 +31,27 @@ func run_ride_tests() -> void:
 	_assert(KartMath.format_time(65.432) == "01:05.43", "kart timer should use centiseconds")
 	_assert(KartMath.valid_checkpoint_crossing(1.0, 2.0, 0.8), "forward checkpoint crossing should be accepted")
 	_assert(not KartMath.valid_checkpoint_crossing(1.0, 2.0, -0.2), "reverse checkpoint crossing should be rejected")
+	var kart_points: Array = [
+		Vector3(-10.0, 0.0, 6.0),
+		Vector3(-11.0, 0.0, -3.0),
+		Vector3(-7.0, 0.0, -8.0),
+		Vector3(3.0, 0.0, -9.0),
+		Vector3(11.0, 0.0, -5.0),
+		Vector3(11.0, 0.0, 2.0),
+		Vector3(7.0, 0.0, 8.0),
+		Vector3(1.0, 0.0, 7.0),
+		Vector3(-2.0, 0.0, 3.0),
+		Vector3(-5.0, 0.0, 7.0)
+	]
+	var kart_boundaries: Dictionary = KartMath.closed_track_boundaries(kart_points, 3.6)
+	var left_boundary: Array = kart_boundaries.get("left", [])
+	var right_boundary: Array = kart_boundaries.get("right", [])
+	_assert(left_boundary.size() == kart_points.size() and right_boundary.size() == kart_points.size(), "kart rails should share one boundary vertex per track point")
+	for boundary_index: int in range(kart_points.size()):
+		var boundary_next: int = (boundary_index + 1) % kart_points.size()
+		_assert(left_boundary[boundary_index].distance_to(left_boundary[boundary_next]) > 0.1, "left kart rail segments should remain connected")
+		_assert(right_boundary[boundary_index].distance_to(right_boundary[boundary_next]) > 0.1, "right kart rail segments should remain connected")
+		_assert(left_boundary[boundary_index].distance_to(right_boundary[boundary_index]) > 1.0, "kart rail pair should leave a drivable lane")
 	var record_path: String = "/private/tmp/primitive_park_kart_record_test_%d.cfg" % Time.get_ticks_usec()
 	_assert(KartRecordStore.save_best(record_path, 42.5), "kart best time should be saved")
 	_assert(is_equal_approx(KartRecordStore.load_best(record_path), 42.5), "kart best time should be loaded")
@@ -100,6 +121,10 @@ func run_scene_tests(tree: SceneTree) -> void:
 	_assert(park.get_node_or_null("Carousel") != null, "carousel node should be generated")
 	_assert(park.get_node_or_null("FreeFallTower") != null, "free-fall tower node should be generated")
 	_assert(park.get_node_or_null("GoKart") != null, "go-kart node should be generated")
+	var coaster_sign_label: Label3D = park.get_node_or_null("RollerCoaster/LandmarkSign/SignLabel") as Label3D
+	_assert(coaster_sign_label != null, "roller coaster should expose its attraction name label")
+	if coaster_sign_label != null:
+		_assert(coaster_sign_label.billboard == BaseMaterial3D.BILLBOARD_DISABLED, "attraction name labels should keep a fixed board orientation")
 	_assert(tree.get_nodes_in_group("landmark_zone").size() == 5, "five landmark trigger zones should exist")
 	_assert(tree.get_nodes_in_group("ride_zone").size() == 5, "five ride boarding zones should exist")
 	_assert(park.get_node_or_null("AttractionAnimator") != null, "one attraction animator should exist")
@@ -218,7 +243,21 @@ func run_scene_tests(tree: SceneTree) -> void:
 		player.call("apply_camera_motion", Vector2(40.0, -20.0))
 		_assert(camera.current, "%s should keep the third-person camera active while riding" % ride_id)
 		_assert(not is_equal_approx(ride_camera_yaw_before, camera_yaw.rotation.y), "%s should keep camera orbit input while riding" % ride_id)
+		if ride_id == &"roller_coaster":
+			var coaster_camera_heading: float = camera_yaw.global_rotation.y
+			var coaster_player_heading: float = player.global_rotation.y
+			var coaster_vehicle_heading: float = coaster_cart.global_rotation.y
+			var coaster_vehicle_turn_detected: bool = false
+			for coaster_view_step: int in range(16):
+				animator.call("advance_time", 0.5)
+				await tree.physics_frame
+				if absf(wrapf(coaster_cart.global_rotation.y - coaster_vehicle_heading, -PI, PI)) > 0.05:
+					coaster_vehicle_turn_detected = true
+			_assert(coaster_vehicle_turn_detected, "roller coaster should change vehicle heading along its track")
+			_assert(absf(wrapf(camera_yaw.global_rotation.y - coaster_camera_heading, -PI, PI)) < 0.01, "roller coaster supports should not rotate the camera view")
+			_assert(absf(wrapf(player.global_rotation.y - coaster_player_heading, -PI, PI)) < 0.01, "roller coaster supports should not rotate the camera parent")
 		var seat_anchor: Node3D = descriptor.get("seat_anchor") as Node3D
+		player.call("_sync_to_ride_anchor")
 		_assert_seated_player(player, visual_root, seat_anchor, float(config["player"]["ride_seat_pivot_height"]), ride_id)
 		Input.action_press(&"move_forward")
 		await tree.physics_frame
