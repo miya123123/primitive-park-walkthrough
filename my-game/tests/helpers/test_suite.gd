@@ -116,6 +116,13 @@ func run_scene_tests(tree: SceneTree) -> void:
 	await tree.process_frame
 	await tree.process_frame
 	var park: Node = main_instance.get_node("Park/GeneratedPark")
+	var daylight_environment: WorldEnvironment = main_instance.get_node_or_null("DaylightEnvironment") as WorldEnvironment
+	_assert(daylight_environment != null, "daylight environment should exist")
+	if daylight_environment != null:
+		_assert(daylight_environment.environment != null, "daylight environment should provide an environment resource")
+		if daylight_environment.environment != null:
+			_assert(daylight_environment.environment.adjustment_enabled, "daylight environment brightness adjustment should be enabled")
+			_assert(is_equal_approx(daylight_environment.environment.adjustment_brightness, 0.9), "daylight environment brightness should be reduced to 0.9")
 	_assert(park.get_node_or_null("FerrisWheel") != null, "ferris wheel node should be generated")
 	_assert(park.get_node_or_null("RollerCoaster") != null, "roller coaster node should be generated")
 	_assert(park.get_node_or_null("Carousel") != null, "carousel node should be generated")
