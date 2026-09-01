@@ -122,7 +122,7 @@ func run_scene_tests(tree: SceneTree) -> void:
 		_assert(daylight_environment.environment != null, "daylight environment should provide an environment resource")
 		if daylight_environment.environment != null:
 			_assert(daylight_environment.environment.adjustment_enabled, "daylight environment brightness adjustment should be enabled")
-			_assert(is_equal_approx(daylight_environment.environment.adjustment_brightness, 0.9), "daylight environment brightness should be reduced to 0.9")
+			_assert(is_equal_approx(daylight_environment.environment.adjustment_brightness, 0.75), "daylight environment brightness should be reduced to 0.75")
 	_assert(park.get_node_or_null("FerrisWheel") != null, "ferris wheel node should be generated")
 	_assert(park.get_node_or_null("RollerCoaster") != null, "roller coaster node should be generated")
 	_assert(park.get_node_or_null("Carousel") != null, "carousel node should be generated")

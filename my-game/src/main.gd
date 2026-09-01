@@ -71,7 +71,7 @@ func _configure_environment() -> void:
 	environment.ambient_light_energy = 0.75
 	environment.ambient_light_color = Color("#F4F7FF")
 	environment.adjustment_enabled = true
-	environment.adjustment_brightness = 0.9
+	environment.adjustment_brightness = 0.75
 	world_environment.environment = environment
 	add_child(world_environment)
 
