@@ -2,7 +2,7 @@
 
 [ブラウザでデモを遊ぶ](https://miya123123.github.io/primitive-park-walkthrough/)
 
-Godot 4.6.2で制作した、プリミティブ形状だけの72m四方の遊園地を三人称視点で歩き回る3Dゲームです。観覧車、ジェットコースター、メリーゴーラウンド、フリーフォールタワー、ゴーカートを体験できます。外部モデル・テクスチャ・音声を使わず、JSON設定とGDScriptから園内を生成します。
+Godot 4.6.2で制作した、プリミティブ形状のみで構成された遊園地を三人称視点で歩き回る3Dゲームです。観覧車、ジェットコースター、メリーゴーラウンド、フリーフォールタワー、ゴーカートを体験できます。外部モデル・テクスチャ・音声は使用せず、JSON設定とGDScriptから園内を生成しています。
 
 ## 遊び方
 
@@ -13,8 +13,6 @@ Godot 4.6.2で制作した、プリミティブ形状だけの72m四方の遊園
 - `E`: 乗り場で乗車／ゴーカートから退出
 - `R`: ゴーカートを最後に通過したチェックポイントへリセット
 - `Esc`: マウスカーソルを解放（左クリックで再取得）
-
-ブラウザ版はGitHub Pagesで配信しています。初回クリックでゲーム画面を選択すると、マウス操作とキーボード操作が有効になります。
 
 ## ローカルで起動
 
@@ -29,17 +27,16 @@ godot --path .
 godot --headless --path . --script tests/run_all_tests.gd --log-file /private/tmp/primitive_park_tests.log
 ```
 
-## GitHub Pages公開
+## 使用技術
 
-`master` へのpushで [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) がGodot Web版をビルドし、GitHub Pagesへ自動デプロイします。WebGL 2に対応するCompatibilityレンダラーを使用し、スレッドを使わないWeb export presetで構成しています。
+- Godot 4.6.2: ゲームエンジン
+- Claude Code Game Studios: 開発フレームワーク
+- Codex: 開発支援ツール
+- GoPeak: テスト
 
-## プロジェクト構成
+## 開発者
 
-- [`my-game/`](my-game/): Godotプロジェクト本体
-- [`my-game/src/`](my-game/src/): ゲーム実装
-- [`my-game/assets/data/park_config.json`](my-game/assets/data/park_config.json): 園内・乗り物設定
-- [`my-game/design/`](my-game/design/): 設計資料
-- [`my-game/production/qa/`](my-game/production/qa/): QA記録
+`miya123123`
 
 ## ライセンス
 
