@@ -21,12 +21,6 @@ cd my-game
 godot --path .
 ```
 
-自動テストは次のコマンドで実行できます。
-
-```bash
-godot --headless --path . --script tests/run_all_tests.gd --log-file /private/tmp/primitive_park_tests.log
-```
-
 ## 使用技術
 
 - Godot 4.6.2: ゲームエンジン
